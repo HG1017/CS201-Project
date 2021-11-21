@@ -262,3 +262,265 @@ void free_suffix_tree(struct ukkonen_suffix_tree_node* dup) // this function fre
             free_suffix_tree(dup->child[i]);
         }
     }
+    if(dup->status == -1)
+    {
+        free(dup->close);
+    }
+
+    free(dup);
+}
+
+void generate_suffix_tree(void) // function for building the appropriate suffix tree for a given string input
+{
+    input_size = strlen(input);
+
+    root_last = (int*)malloc(sizeof(int));
+    *root_last = -1;
+
+    root = generate_node(-1, root_last);
+
+    current_node = root;
+
+    for (int i = 0; i < input_size; i++)
+    {
+        add_to_tree(i);
+    }
+
+    int h = 0;
+
+    DFS_on_suffix_tree(root, h);
+
+}
+
+void travel(struct ukkonen_suffix_tree_node *t, int suffix_array[], int *ind) // function for traveling through the suffixes or the edges of the tree
+{
+    if(t == NULL)
+    {
+        return;
+    }
+
+    if(t->status == -1)
+    {
+        for (int i = 0; i < MAX; i++)
+        {
+            if(t->child[i] != NULL)
+            {
+                travel(t->child[i], suffix_array, ind);
+            }
+        }
+    }
+
+    else if(t->status > -1 && t->status < input_size)
+    {
+        suffix_array[(*ind)++] = t->status;
+    }
+}
+
+void generate_suffix_array(int suffix_array[]) // function builds the linear time suffix array for the suffix tree
+{
+    for(int i = 0; i < input_size; i++)
+    {
+        suffix_array[i] = -1;
+    }
+    int ind = 0;
+    travel(root, suffix_array, &ind);
+
+    printf("Suffix Array for String ");
+
+    for(int i = 0; i < input_size; i++)
+    {
+        printf("%c", input[i]);
+    }
+
+    printf(" is: ");
+
+    for(int i = 0; i< input_size; i++)
+    {
+        if(suffix_array[i] != -1)
+        {
+            printf("%d ", suffix_array[i]);
+        }
+    }
+    endl;
+}
+
+int go_through(char *c, int ind, int b, int e)
+{
+    if(c == NULL)
+    {
+        return 0;
+    }
+
+    int i;
+
+    for (i = b; i <= e && c[ind]!= '\0'; i++, ind++)
+    {
+        if (input[i]!= c[ind])
+        {
+            return -1;
+        }
+    }
+
+    if (c[ind]== '\0')
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+int leaf_counting (struct ukkonen_suffix_tree_node* t)
+{
+    if (t == NULL)
+    {
+        return 0;
+    }
+
+    if (t->status > -1)
+    {
+        endl;
+        printf("Found at position: %d", t->status);
+
+        return 1;
+    }
+
+    int out = 0,i;
+    for (i = 0; i < MAX; i++)
+    {
+        if(t->child[i]!= NULL)
+        {
+            out = out + leaf_counting(t->child[i]);
+        }
+    }
+
+    return out;
+}
+
+int no_of_leaves(struct ukkonen_suffix_tree_node* t)
+{
+    if (t == NULL)
+    {
+        return 0;
+    }
+
+    return leaf_counting(t);
+}
+
+int travel_for_search(struct ukkonen_suffix_tree_node* t, char* c, int ind)
+{
+    if (t== NULL || c == NULL)
+    {
+        return -1;
+    }
+
+    int out = -1;
+
+    if(t->close == NULL)
+        {
+            return -1;
+        }
+
+    if (t->begin != -1)
+    {
+        if(t->close == NULL)
+        {
+            return -1;
+        }
+        out = go_through(c, ind, t->begin, *(t->close));
+
+        if (out== -1)
+        {
+            return -1;
+        }
+        if (out == 1)
+        {
+            if (t->status > -1)
+            {
+                endl;
+                printf("Substring count: 1 and position: %d", t->status);
+            }
+            else
+            {
+                endl;
+                printf("Substring count: %d", no_of_leaves(t));
+            }
+
+            return 1;
+        }
+    }
+
+    ind = ind + length_of_edge(t);
+
+    if (t->child[c[ind]]!= NULL)
+    {
+        return travel_for_search(t->child[c[ind]], c, ind);
+    }
+
+    else
+    {
+        return -1;
+    }
+}
+
+void verify_substring (char* c)
+{
+    if (c == NULL)
+    {
+        return;
+    }
+
+    int out = travel_for_search(root, c, 0);
+
+    if (out == 1)
+    {
+        endl;
+        printf("Pattern <%s> is a substring", c);
+        endl;
+    }
+
+    else
+    {
+        endl;
+        printf("Pattern <%s> is not a substring", c);
+        endl;
+    }
+}
+
+int main()
+{
+   int size;
+
+	printf("The following program takes a string as an input and prints the suffixes present on the edges of the suffix tree and its corresponding linear time suffix array.");
+	endl;
+
+    printf("Please enter the string (length should be less than 200). Press Enter when finished: ");
+
+    char str[200];
+
+	scanf("%[^\n]s",str);
+	endl;
+
+	strcpy(input,str);
+
+	input[strlen(str)]='$';
+
+	printf("The suffixes present in the suffix tree of the input string are:");
+	endl;
+
+    generate_suffix_tree();
+    endl;
+
+    printf("The number of nodes in the suffix tree of string %s is %d", str, cnt);
+    endl;
+
+    input_size--;
+
+    int suffix_array =(int) malloc(sizeof(int) * input_size);
+
+    generate_suffix_array(suffix_array);
+
+    free_suffix_tree(root);
+    free(suffix_array);
+
+    return 0;
+}
