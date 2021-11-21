@@ -515,7 +515,7 @@ int main()
 
     input_size--;
 
-    int *suffix_array =(int) malloc(sizeof(int) * input_size);
+    int *suffix_array =(int*) malloc(sizeof(int) * input_size);
 
     generate_suffix_array(suffix_array);
 
