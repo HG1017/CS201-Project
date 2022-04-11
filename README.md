@@ -1,5 +1,5 @@
 # CS201-Project
-This is the final project for the course CS201
+This is the final project for the course CS201, which involves the construction of Suffix Tree
 
 CS201 group-35
 
